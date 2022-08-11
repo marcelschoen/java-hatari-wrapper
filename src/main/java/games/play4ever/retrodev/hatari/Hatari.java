@@ -138,15 +138,6 @@ public class Hatari {
         }
     }
 
-    public static void ymain(String ... args) {
-        try {
-            new File("build").mkdirs();
-            new ZipHelper().zipDir("./src/main/resources/windows/hatari-emulator", "./build/hatari-archive.zip");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * Main method used mostly for testing / demonstration purposes. Allows to run
      * the emulator manually from a shell using the executable Jar file.
@@ -160,9 +151,7 @@ public class Hatari {
             MODE mode = MODE.low;
             File fileToCopy = null;
 
-
             prepare(new File("./hatari"), Hatari.TOS.tos206);
-
             startEmulator(INSTANCES.testing, machine, memory, mode, machine.hasBlitter, null, fileToCopy);
 
         } catch(Exception e) {
@@ -448,14 +437,13 @@ public class Hatari {
         if (!hatariBin.exists() || !hatariBin.canExecute()) {
             try {
                 System.out.println(">> Unpack emulator to: " + tempDir);
-                unpackEmulator(tempDir, "/windows/hatari-archive.zip");
+                unpackEmulator(tempDir, "/hatari-windows.zip");
                 System.out.println(">> Emulator unpacked to: " + tempDir);
             } catch (IOException ex) {
                 deleteDir(tempDir);
                 throw new RuntimeException("Failed to prepare the emulator: " + ex, ex);
             }
         }
-        System.exit(-1);
         // Always extract TOS to make sure it doesn't use a wrong version from a previous run
         try {
             unpackTOS(tempDir, tos);
@@ -473,7 +461,7 @@ public class Hatari {
      * @throws IOException If the emulator could not be extracted.
      */
     private static void unpackTOS(File tempDir, TOS tos) throws IOException {
-        InputStream tosImg = Hatari.class.getResourceAsStream("/hatari/tos/" + tos.name() + ".img");
+        InputStream tosImg = Hatari.class.getResourceAsStream("/tos/" + tos.name() + ".img");
         byte[] buffer = new byte[4096];
         File tosFile = new File(tempDir, "tos.img");
         FileOutputStream out = new FileOutputStream(tosFile);

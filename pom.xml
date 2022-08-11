@@ -74,30 +74,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
-                        <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>build-helper-maven-plugin</artifactId>
-                            <version>3.3.0</version>
-                            <executions>
-                                <execution>
-                                    <id>add-resource</id>
-                                    <phase>generate-resources</phase>
-                                    <goals>
-                                        <goal>add-resource</goal>
-                                    </goals>
-                                    <configuration>
-                                        <resources>
-                                            <resource>
-                                                <include>hatari-windows.zip</include>
-                                                <directory>${basedir}/target</directory>
-                                            </resource>
-                                        </resources>
-                                    </configuration>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -117,6 +93,12 @@
                                         <include>*</include>
                                     </includes>
                                 </resource>
+                                <resource>
+                                    <directory>${basedir}/src/main/resources</directory>
+                                    <includes>
+                                        <include>*</include>
+                                    </includes>
+                                </resource>
                             </resources>
                         </configuration>
                     </execution>
@@ -124,14 +106,6 @@
             </plugin>
 
         </plugins>
-        <!--
-        <resources>
-            <resource>
-                <directory>${basedir}/target/hatari-archive</directory>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
-        -->
     </build>
     <dependencies>
         <dependency>
