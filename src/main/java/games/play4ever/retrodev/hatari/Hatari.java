@@ -270,7 +270,8 @@ public class Hatari {
         System.out.println(">> Start emulator in: " + Hatari.workDirectory.getAbsolutePath());
 
         ArrayList<String> args = new ArrayList<>();
-        args.add(new File(Hatari.workDirectory, "hatari-win64-release.exe").getAbsolutePath()); // TODO - multiplatform support
+        args.add(new File(Hatari.workDirectory,
+                PlatformUtil.getOperatingSystemType().emulatorExecutable).getAbsolutePath()); // TODO - multiplatform support
         args.add("--fast-boot");
         args.add("true");
 
@@ -491,13 +492,14 @@ public class Hatari {
         Hatari.workDirectory = workDirectory;
         Hatari.workDirectory.mkdirs();
         File tempDir = workDirectory;
-        File hatariBin = new File(tempDir, "hatari-win64-release.exe");
+        PlatformUtil.OSType osType = PlatformUtil.getOperatingSystemType();
+        File hatariBin = new File(tempDir, osType.emulatorExecutable);
         if (!hatariBin.exists() || !hatariBin.canExecute()) {
             try {
-                String emulatorArchive = PlatformUtil.getOperatingSystemType().emulatorArchive;
+                String emulatorArchive = osType.emulatorArchive;
                 if(emulatorArchive != null) {
-                    System.out.println(">> Unpack emulator to: " + tempDir);
-                    unpackEmulator(tempDir, "/hatari-windows.zip");
+                    System.out.println(">> Unpack emulator " + osType.emulatorArchive + " to: " + tempDir);
+                    unpackEmulator(tempDir, osType.emulatorArchive);
                     System.out.println(">> Emulator unpacked to: " + tempDir);
                 } else {
                     throw new RuntimeException(">> Platform '" + PlatformUtil.getOperatingSystemType().name() + " not yet supported.");
@@ -548,5 +550,8 @@ public class Hatari {
         InputStream resourceStream = Hatari.class.getResourceAsStream(fileZip);
         System.out.println("> Zip stream: " + resourceStream);
         unpackZip(tempDir, resourceStream);
+        // Make Hatari executable... executable!
+        File hatariExe = new File(tempDir, PlatformUtil.getOperatingSystemType().emulatorExecutable);
+        hatariExe.setExecutable(true);
     }
 }

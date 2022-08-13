@@ -17,15 +17,18 @@ public class PlatformUtil {
      * types of Operating Systems
      */
     public enum OSType {
-        Windows("/hatari-windows.zip"),
-        MacOS(null), // TBD
-        Linux("/hatari-linux.zip"),
-        Other(null)
+        Windows("/hatari-windows.zip", "hatari-win64-release.exe"),
+        MacOS(null, null), // TBD
+        Linux("/hatari-linux.zip", "hatari"),
+        Other(null, null)
         ;
         public String emulatorArchive;
 
-        OSType(String emulatorArchive) {
+        public String emulatorExecutable;
+
+        OSType(String emulatorArchive, String emulatorExecutable) {
             this.emulatorArchive = emulatorArchive;
+            this.emulatorExecutable = emulatorExecutable;
         }
     };
 
@@ -51,6 +54,7 @@ public class PlatformUtil {
                 detectedOS = OSType.Other;
             }
         }
+        System.out.println(">> Detected platform: " + detectedOS.name());
         return detectedOS;
     }
 }

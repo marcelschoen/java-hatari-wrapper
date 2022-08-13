@@ -40,10 +40,24 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${basedir}/target/hatari-archive</outputDirectory>
+                            <outputDirectory>${basedir}/target/hatari-archive-windows</outputDirectory>
                             <finalName>hatari</finalName>
                             <descriptors>
-                                <descriptor>./src/main/build/assembly.xml</descriptor>
+                                <descriptor>src/main/build/assembly-hatari-windows.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>prepare-linux-zip</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/hatari-archive-linux</outputDirectory>
+                            <finalName>hatari</finalName>
+                            <descriptors>
+                                <descriptor>src/main/build/assembly-hatari-linux.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>
@@ -88,7 +102,13 @@
                         <configuration>
                             <resources>
                                 <resource>
-                                    <directory>${basedir}/target/hatari-archive</directory>
+                                    <directory>${basedir}/target/hatari-archive-linux</directory>
+                                    <includes>
+                                        <include>*</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>${basedir}/target/hatari-archive-windows</directory>
                                     <includes>
                                         <include>*</include>
                                     </includes>
