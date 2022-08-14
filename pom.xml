@@ -138,6 +138,11 @@
             <artifactId>jna-platform</artifactId>
             <version>5.12.1</version>
         </dependency>
+        <dependency>
+            <groupId>x11</groupId>
+            <artifactId>java-x11</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
 </project>

@@ -1,9 +1,9 @@
 package games.play4ever.retrodev.hatari;
 
-import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
 import com.sun.jna.platform.win32.*;
 import games.play4ever.retrodev.util.FileUtil;
+import games.play4ever.retrodev.util.HatariWindow;
 import games.play4ever.retrodev.util.PlatformUtil;
 import games.play4ever.retrodev.util.ZipHelper;
 
@@ -186,7 +186,7 @@ public class Hatari {
     private static Map<INSTANCES, Process> emulatorProcesses = new HashMap<>();
 
     /** Store reference to emulator windows. */
-    private static Map<INSTANCES, DesktopWindow> emulatorWindows = new HashMap<>();
+    private static Map<INSTANCES, HatariWindow> emulatorWindows = new HashMap<>();
 
     static {
         try {
@@ -250,7 +250,7 @@ public class Hatari {
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
      * @param programOrSource Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
-    private static DesktopWindow startEmulator(INSTANCES instance,
+    private static HatariWindow startEmulator(INSTANCES instance,
                                              MACHINE machine,
                                              MEMORY memory,
                                              MODE mode,
@@ -263,8 +263,9 @@ public class Hatari {
             return emulatorWindows.get(instance);
         }
 
-        Map<WinDef.HWND, DesktopWindow> alreadyOpenWindows = new HashMap<>();
-        WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
+        Map<String, HatariWindow> alreadyOpenWindows = HatariWindow.getAllDesktopWindows();
+//        WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
+
 
 
         System.out.println(">> Start emulator in: " + Hatari.workDirectory.getAbsolutePath());
@@ -350,7 +351,7 @@ public class Hatari {
         Arrays.asList(finalArgs).stream().forEach(arg -> System.out.println("> " + arg));
         System.out.println("------------------------------------------");
 
-        DesktopWindow result = null;
+        HatariWindow result = null;
         ProcessBuilder pb = new ProcessBuilder(finalArgs);
         pb.directory(Hatari.workDirectory.getAbsoluteFile());
         try {
@@ -360,8 +361,8 @@ public class Hatari {
             // Try to get handle of emulator window for up to 1 second
             long now = System.currentTimeMillis();
             while(result == null && (System.currentTimeMillis() - now) < 1000) {
-                List<DesktopWindow> windows = WindowUtils.getAllWindows(true);
-                for(DesktopWindow desktopWindow : windows) {
+                List<HatariWindow> windows = HatariWindow.getAllDesktopWindows();
+                for(HatariWindow desktopWindow : windows) {
                     // Make sure it's not a window that was open before (like one from an already running Hatari instance)
                     if(alreadyOpenWindows.get(desktopWindow.getHWND()) == null) {
                         // Check if it's a Hatari window
