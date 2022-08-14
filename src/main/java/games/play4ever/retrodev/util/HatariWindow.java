@@ -13,6 +13,7 @@ import java.util.*;
 public class HatariWindow {
 
     private String windowId = null;
+    private String title = "";
 
     private DesktopWindow jnaDesktopWindow;
 
@@ -22,14 +23,29 @@ public class HatariWindow {
     private static X11.Window x11RootWindow;
 
     public String getId() {
-        if(jnaDesktopWindow != null) {
-        }
-        return null;
+        return this.windowId;
     }
 
-    public static Map<String, HatariWindow> getAllDesktopWindows() {
+    public static List<HatariWindow> getDesktopWindowsAsList() {
+        List<HatariWindow> alreadyOpenWindows = new ArrayList<>();
+        if(PlatformUtil.getOperatingSystemType() == PlatformUtil.OSType.Linux) {
+            getX11DesktopWindows().stream()
+                    .map(w -> new HatariWindow(w, ""))
+                    .forEach(hw -> alreadyOpenWindows.add(hw));
+        } else {
+            WindowUtils.getAllWindows(true).stream()
+                    .map(w -> new HatariWindow(w))
+                    .forEach(hw -> alreadyOpenWindows.add(hw));
+        }
+        return alreadyOpenWindows;
+    }
+
+    public static Map<String, HatariWindow> getAllDesktopWindowsAsMap() {
         Map<String, HatariWindow> alreadyOpenWindows = new HashMap<>();
         if(PlatformUtil.getOperatingSystemType() == PlatformUtil.OSType.Linux) {
+            getX11DesktopWindows().stream()
+                    .map(w -> new HatariWindow(w, "?"))
+                    .forEach(hw -> alreadyOpenWindows.put(hw.getId(), hw));
         } else {
             WindowUtils.getAllWindows(true).stream()
                     .map(w -> new HatariWindow(w))
@@ -48,17 +64,24 @@ public class HatariWindow {
         }
     }
 
+    public String getTitle() {
+        return this.title;
+    }
+
     public HatariWindow(DesktopWindow desktopWindow) {
+        this.windowId = desktopWindow.getHWND().toString();
+        this.title = desktopWindow.getTitle();
         this.jnaDesktopWindow = desktopWindow;
     }
 
-    public HatariWindow(X11.Window x11Window) {
+    public HatariWindow(X11.Window x11Window, String title) {
+        this.windowId = x11Window.toString();
+        this.title = title;
         this.x11Window = x11Window;
     }
 
     private static List<DesktopWindow> getJnaDesktopWindows() {
         return WindowUtils.getAllWindows(true);
-
     }
 
     private static List<X11.Window> getX11DesktopWindows() {

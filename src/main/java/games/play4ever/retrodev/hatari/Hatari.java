@@ -1,11 +1,9 @@
 package games.play4ever.retrodev.hatari;
 
-import com.sun.jna.platform.WindowUtils;
 import com.sun.jna.platform.win32.*;
 import games.play4ever.retrodev.util.FileUtil;
 import games.play4ever.retrodev.util.HatariWindow;
 import games.play4ever.retrodev.util.PlatformUtil;
-import games.play4ever.retrodev.util.ZipHelper;
 
 import java.awt.*;
 import java.io.*;
@@ -263,7 +261,7 @@ public class Hatari {
             return emulatorWindows.get(instance);
         }
 
-        Map<String, HatariWindow> alreadyOpenWindows = HatariWindow.getAllDesktopWindows();
+        Map<String, HatariWindow> alreadyOpenWindows = HatariWindow.getAllDesktopWindowsAsMap();
 //        WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
 
 
@@ -361,10 +359,10 @@ public class Hatari {
             // Try to get handle of emulator window for up to 1 second
             long now = System.currentTimeMillis();
             while(result == null && (System.currentTimeMillis() - now) < 1000) {
-                List<HatariWindow> windows = HatariWindow.getAllDesktopWindows();
+                List<HatariWindow> windows = HatariWindow.getDesktopWindowsAsList();
                 for(HatariWindow desktopWindow : windows) {
                     // Make sure it's not a window that was open before (like one from an already running Hatari instance)
-                    if(alreadyOpenWindows.get(desktopWindow.getHWND()) == null) {
+                    if(alreadyOpenWindows.get(desktopWindow.getId()) == null) {
                         // Check if it's a Hatari window
                         if(desktopWindow.getTitle().startsWith("Hatari v")) {
                             emulatorWindows.put(instance, desktopWindow);
