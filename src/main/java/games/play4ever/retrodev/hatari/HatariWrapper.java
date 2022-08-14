@@ -5,7 +5,6 @@ import com.sun.jna.platform.WindowUtils;
 import com.sun.jna.platform.win32.*;
 import games.play4ever.retrodev.util.FileUtil;
 import games.play4ever.retrodev.util.PlatformUtil;
-import games.play4ever.retrodev.util.ZipHelper;
 
 import java.awt.*;
 import java.io.*;
@@ -19,9 +18,12 @@ import static games.play4ever.retrodev.util.FileUtil.*;
  * Will unpack the emulator from the Java resources into
  * a temporary directory and then execute it from there.
  *
+ * When starting the emulator, an "INSTANCE" must be selected, either "testing"
+ * or "building". The main differences between
+ *
  * @author Marcel Schoen
  */
-public class Hatari {
+public class HatariWrapper {
 
     private static Robot robot;
 
@@ -117,10 +119,10 @@ public class Hatari {
          */
         ste("ste", 512, TOS.tos106, true);
 
-        private TOS tosVersion = TOS.tos106;
-        private String type;
-        boolean hasBlitter = false;
-        private int kbMemory = 1024; // defaults to 1 MB
+        public TOS tosVersion = TOS.tos106;
+        public String type;
+        public boolean hasBlitter = false;
+        public int kbMemory = 1024; // defaults to 1 MB
 
         MACHINE(String type, int defaultMemory, TOS defaultTosVersion, boolean hasBlitter) {
             this.type = type;
@@ -147,7 +149,7 @@ public class Hatari {
          */
         high("high");
 
-        String value;
+        public String value;
 
         MODE(String value) {
             this.value = value;
@@ -165,7 +167,7 @@ public class Hatari {
         mb4(4 * 1024),
         mb8(8 * 1024);
 
-        private int kbMemory;
+        public int kbMemory;
 
         MEMORY(int kbMemory) {
             this.kbMemory = kbMemory;
@@ -180,7 +182,7 @@ public class Hatari {
         building
     }
 
-    private static File workDirectory = new File(".");
+    static File workDirectory = new File(".");
 
     /** Store reference to emulator processes. */
     private static Map<INSTANCES, Process> emulatorProcesses = new HashMap<>();
@@ -267,11 +269,17 @@ public class Hatari {
         WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
 
 
-        System.out.println(">> Start emulator in: " + Hatari.workDirectory.getAbsolutePath());
+        System.out.println(">> Start emulator in: " + HatariWrapper.workDirectory.getAbsolutePath());
 
         ArrayList<String> args = new ArrayList<>();
-        args.add(new File(Hatari.workDirectory,
+        args.add(new File(HatariWrapper.workDirectory,
                 PlatformUtil.getOperatingSystemType().emulatorExecutable).getAbsolutePath()); // TODO - multiplatform support
+
+        File runtimeFolder = getOrCreateRuntimeBuildFolder();
+        args.add("-d");
+        args.add(runtimeFolder.getAbsolutePath());
+
+
         args.add("--fast-boot");
         args.add("true");
 
@@ -325,10 +333,6 @@ public class Hatari {
             args.add("mono");
         }
 
-        File runtimeFolder = getOrCreateRuntimeBuildFolder();
-        args.add("-d");
-        args.add(runtimeFolder.getAbsolutePath());
-
         if (programOrSource != null && programOrSource.isFile()) {
             if (programOrSource.getName().toLowerCase().endsWith(".zip")) {
                 try {
@@ -352,7 +356,7 @@ public class Hatari {
 
         DesktopWindow result = null;
         ProcessBuilder pb = new ProcessBuilder(finalArgs);
-        pb.directory(Hatari.workDirectory.getAbsoluteFile());
+        pb.directory(HatariWrapper.workDirectory.getAbsoluteFile());
         try {
             Process p = pb.start();
             emulatorProcesses.put(instance, p);
@@ -391,7 +395,7 @@ public class Hatari {
     }
 
     private static File getOrCreateRuntimeBuildFolder() {
-        File runtimeFolder = new File(Hatari.workDirectory, "drivec");
+        File runtimeFolder = new File(HatariWrapper.workDirectory, "drivec");
         if(runtimeFolder.exists() && runtimeFolder.isDirectory()) {
             return runtimeFolder;
         }
@@ -489,8 +493,8 @@ public class Hatari {
      * @param workDirectory The directory where to unpack the emulator files.
      */
     public static void prepare(File workDirectory, TOS tos) {
-        Hatari.workDirectory = workDirectory;
-        Hatari.workDirectory.mkdirs();
+        HatariWrapper.workDirectory = workDirectory;
+        HatariWrapper.workDirectory.mkdirs();
         File tempDir = workDirectory;
         PlatformUtil.OSType osType = PlatformUtil.getOperatingSystemType();
         File hatariBin = new File(tempDir, osType.emulatorExecutable);
@@ -526,7 +530,7 @@ public class Hatari {
      * @throws IOException If the emulator could not be extracted.
      */
     private static void unpackTOS(File tempDir, TOS tos) throws IOException {
-        InputStream tosImg = Hatari.class.getResourceAsStream("/tos/" + tos.name() + ".img");
+        InputStream tosImg = HatariWrapper.class.getResourceAsStream("/tos/" + tos.name() + ".img");
         byte[] buffer = new byte[4096];
         File tosFile = new File(tempDir, "tos.img");
         FileOutputStream out = new FileOutputStream(tosFile);
@@ -547,7 +551,7 @@ public class Hatari {
      * @throws IOException If the emulator could not be extracted.
      */
     private static void unpackEmulator(File tempDir, String fileZip) throws IOException {
-        InputStream resourceStream = Hatari.class.getResourceAsStream(fileZip);
+        InputStream resourceStream = HatariWrapper.class.getResourceAsStream(fileZip);
         System.out.println("> Zip stream: " + resourceStream);
         unpackZip(tempDir, resourceStream);
         // Make Hatari executable... executable!
