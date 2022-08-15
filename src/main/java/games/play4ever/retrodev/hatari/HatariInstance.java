@@ -37,6 +37,8 @@ import java.util.List;
  */
 public class HatariInstance {
 
+    private String label = "hatari";
+
     private boolean windowed = true;
     private boolean fullSpeed = false;
     private boolean fastBoot = false;
@@ -44,10 +46,17 @@ public class HatariInstance {
     private boolean useSound = true;
     private boolean useStatusBar = true;
 
-    private HatariWrapper.MACHINE machine = HatariWrapper.MACHINE.ste;
-    private HatariWrapper.TOS tos = HatariWrapper.TOS.tos206;
-    private HatariWrapper.MODE mode = HatariWrapper.MODE.low;
-    private HatariWrapper.MEMORY memory = HatariWrapper.MEMORY.mb1;
+    private MachineType machine = MachineType.ste;
+    private TOS tos = TOS.tos206;
+    private ScreenMode mode = ScreenMode.low;
+    private Memory memory = Memory.mb1;
+
+    /**
+     * Creates a new instance with the default configuration.
+     */
+    public HatariInstance(String label) {
+        this.label = label;
+    }
 
     /**
      * Creates a new instance configuration.
@@ -69,10 +78,10 @@ public class HatariInstance {
                           boolean useBlitter,
                           boolean useSound,
                           boolean useStatusBar,
-                          HatariWrapper.MACHINE machine,
-                          HatariWrapper.TOS tos,
-                          HatariWrapper.MODE mode,
-                          HatariWrapper.MEMORY memory) {
+                          MachineType machine,
+                          TOS tos,
+                          ScreenMode mode,
+                          Memory memory) {
         this.windowed = windowed;
         this.fastBoot = fastBoot;
         this.fullSpeed = fullSpeed;
@@ -85,6 +94,94 @@ public class HatariInstance {
         this.memory = memory;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public boolean isWindowed() {
+        return windowed;
+    }
+
+    public boolean isFullSpeed() {
+        return fullSpeed;
+    }
+
+    public boolean isFastBoot() {
+        return fastBoot;
+    }
+
+    public boolean isUseBlitter() {
+        return useBlitter;
+    }
+
+    public boolean isUseSound() {
+        return useSound;
+    }
+
+    public boolean isUseStatusBar() {
+        return useStatusBar;
+    }
+
+    public MachineType getMachine() {
+        return machine;
+    }
+
+    public TOS getTos() {
+        return tos;
+    }
+
+    public ScreenMode getMode() {
+        return mode;
+    }
+
+    public Memory getMemory() {
+        return memory;
+    }
+
+    public void setWindowed(boolean windowed) {
+        this.windowed = windowed;
+    }
+
+    public void setFullSpeed(boolean fullSpeed) {
+        this.fullSpeed = fullSpeed;
+    }
+
+    public void setFastBoot(boolean fastBoot) {
+        this.fastBoot = fastBoot;
+    }
+
+    public void setUseBlitter(boolean useBlitter) {
+        this.useBlitter = useBlitter;
+    }
+
+    public void setUseSound(boolean useSound) {
+        this.useSound = useSound;
+    }
+
+    public void setUseStatusBar(boolean useStatusBar) {
+        this.useStatusBar = useStatusBar;
+    }
+
+    public void setMachine(MachineType machine) {
+        this.machine = machine;
+    }
+
+    public void setTos(TOS tos) {
+        this.tos = tos;
+    }
+
+    public void setMode(ScreenMode mode) {
+        this.mode = mode;
+    }
+
+    public void setMemory(Memory memory) {
+        this.memory = memory;
+    }
+
     /**
      * Returns the Hatari emulator commandline arguments based on
      * the settings of this instance.
@@ -93,21 +190,23 @@ public class HatariInstance {
      */
     public List<String> getRuntimeArguments() {
         List<String> args = new ArrayList<>();
-        args.add(new File(HatariWrapper.workDirectory,
-                PlatformUtil.getOperatingSystemType().emulatorExecutable).getAbsolutePath()); // TODO - multiplatform support
 
         addArgument(args,"--fast-boot", fastBoot);
         addArgument(args,"--fast-forward", fullSpeed);
         addArgument(args,"--statusbar", useStatusBar);
         addArgument(args,"--blitter", useBlitter);
-        addArgument(args,"--sound", useSound ? "on" : "off");
+        if(!useSound) {
+            addArgument(args,"--sound", "off");
+        }
 
         addArgument(args, "--machine", machine.type);
         addArgument(args, "--memsize", "" + memory.kbMemory);
         addArgument(args, "--tos-res", mode.value);
-        if (mode == HatariWrapper.MODE.high) {
-            args.add("--monitor");
+        args.add("--monitor");
+        if (mode == ScreenMode.high) {
             args.add("mono");
+        } else {
+            args.add("tv");
         }
         if(windowed) {
             args.add("-w");

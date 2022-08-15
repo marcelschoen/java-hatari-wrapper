@@ -27,168 +27,13 @@ public class HatariWrapper {
 
     private static Robot robot;
 
-    /**
-     * TOS versions included in this Java wrapper.
-     */
-    public enum TOS {
-        etos512cz,
-        etos512de,
-        etos512es,
-        etos512fi,
-        etos512fr,
-        etos512gr,
-        etos512hu,
-        etos512it,
-        etos512nl,
-        etos512no,
-        etos512pl,
-        etos512ru,
-        etos512se,
-        etos512sg,
-        etos512tr,
-        etos512uk,
-        etos512us,
-        tos100,
-        tos102,
-        tos104,
-        tos106,
-        tos205,
-        tos206,
-        tos306,
-        tos402,
-        tos404;
-
-        /**
-         * Tries to return the EmuTOS version which corresponds to the current locale language
-         * or country code value of the running JVM.
-         *
-         * @return The EmuTOS matching the current language / country, or the US version (fallback).
-         */
-        public static TOS getEmuTOSByLocale() {
-            // 1st try by language code, e.g. "de", "it"
-            TOS value = getLocalizedEmuTOS(Locale.getDefault().getLanguage().toLowerCase());
-            if(value == null) {
-                // If that fails, try country code (e.g. "uk", "us")
-                value = getLocalizedEmuTOS(Locale.getDefault().getCountry().toLowerCase());
-            }
-            return value == null ? etos512us : value;
-        }
-
-        /**
-         * Tries to return the EmuTOS version which corresponds to the given language
-         * or country code value.
-         *
-         * @param code The 2-character country or language code
-         * @return The EmuTOS matching the current language, or the US version (fallback).
-         */
-        public static TOS getEmuTOSByCountryOrLanguage(String code) {
-            return getLocalizedEmuTOS(code);
-        }
-
-        private static TOS getLocalizedEmuTOS(String code) {
-            if(code.trim().length() != 2) {
-                throw new IllegalArgumentException("Parameter code must be a 2-character value: " +  code);
-            }
-            String tosName = "etos512" + code;
-            try {
-                return valueOf(tosName);
-            } catch(Exception e) {
-                // ignore
-            }
-            return null;
-        }
-    }
-
-    /**
-     * Defines which type of Atari system to emulate.
-     */
-    public enum MACHINE {
-
-        /**
-         * Standard ST
-         */
-        st("st", 512, TOS.tos100, false),
-
-        /**
-         * Mega ST (blitter)
-         */
-        megast("megast", 1024, TOS.tos102, true),
-
-        /**
-         * STE (hardware scrolling, DMA audio, 4 ports)
-         */
-        ste("ste", 512, TOS.tos106, true);
-
-        public TOS tosVersion = TOS.tos106;
-        public String type;
-        public boolean hasBlitter = false;
-        public int kbMemory = 1024; // defaults to 1 MB
-
-        MACHINE(String type, int defaultMemory, TOS defaultTosVersion, boolean hasBlitter) {
-            this.type = type;
-            this.kbMemory = defaultMemory;
-            this.tosVersion = defaultTosVersion;
-            this.hasBlitter = hasBlitter;
-        }
-    }
-
-    /**
-     * Atari ST screen mode.
-     */
-    public enum MODE {
-        /**
-         * Low resolution (320x200 / 16 colors)
-         */
-        low("low"),
-        /**
-         * Medium resolution (640x200 / 4 colors)
-         */
-        medium("med"),
-        /**
-         * High resolution (640x400 / monochrome)
-         */
-        high("high");
-
-        public String value;
-
-        MODE(String value) {
-            this.value = value;
-        }
-    }
-
-    /**
-     * Possible values to use for the memory.
-     */
-    public enum MEMORY {
-        kb256(256),
-        kb512(512),
-        mb1(1024),
-        mb2(2 * 1024),
-        mb4(4 * 1024),
-        mb8(8 * 1024);
-
-        public int kbMemory;
-
-        MEMORY(int kbMemory) {
-            this.kbMemory = kbMemory;
-        }
-    }
-
-    public enum INSTANCES {
-        // For running the compiled program (game)
-        testing,
-
-        // For running the GFA editor and compiler
-        building
-    }
-
     static File workDirectory = new File(".");
 
     /** Store reference to emulator processes. */
-    private static Map<INSTANCES, Process> emulatorProcesses = new HashMap<>();
+    private static Map<HatariInstance, Process> emulatorProcesses = new HashMap<>();
 
     /** Store reference to emulator windows. */
-    private static Map<INSTANCES, DesktopWindow> emulatorWindows = new HashMap<>();
+    private static Map<HatariInstance, DesktopWindow> emulatorWindows = new HashMap<>();
 
     static {
         try {
@@ -206,13 +51,14 @@ public class HatariWrapper {
      */
     public static void main(String ... args) {
         try {
-            MACHINE machine = MACHINE.ste;
-            MEMORY memory = MEMORY.mb1;
-            MODE mode = MODE.low;
+            MachineType machine = MachineType.ste;
+            Memory memory = Memory.mb1;
+            ScreenMode mode = ScreenMode.low;
             File fileToCopy = null;
 
+            HatariInstance instance = new HatariInstance("demo");
             prepare(new File("./hatari"), TOS.getEmuTOSByLocale());
-            startEmulator(INSTANCES.testing, machine, memory, mode, machine.hasBlitter, null, fileToCopy);
+            startEmulator(instance, machine, memory, mode, machine.hasBlitter, null, fileToCopy);
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -252,10 +98,10 @@ public class HatariWrapper {
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
      * @param programOrSource Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
-    private static DesktopWindow startEmulator(INSTANCES instance,
-                                             MACHINE machine,
-                                             MEMORY memory,
-                                             MODE mode,
+    private static DesktopWindow startEmulator(HatariInstance instance,
+                                             MachineType machine,
+                                             Memory memory,
+                                             ScreenMode mode,
                                              boolean blitter,
                                              File memorySnapshotFile,
                                              File programOrSource) {
@@ -268,6 +114,10 @@ public class HatariWrapper {
         Map<WinDef.HWND, DesktopWindow> alreadyOpenWindows = new HashMap<>();
         WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
 
+        if (emulatorProcesses.get(instance) != null) {
+            // Instance of this type already running - try to kill it first
+            emulatorProcesses.get(instance).destroyForcibly();
+        }
 
         System.out.println(">> Start emulator in: " + HatariWrapper.workDirectory.getAbsolutePath());
 
@@ -275,63 +125,20 @@ public class HatariWrapper {
         args.add(new File(HatariWrapper.workDirectory,
                 PlatformUtil.getOperatingSystemType().emulatorExecutable).getAbsolutePath()); // TODO - multiplatform support
 
+        // Start with given runtime folder as GEMDOS drive C:
         File runtimeFolder = getOrCreateRuntimeBuildFolder();
         args.add("-d");
         args.add(runtimeFolder.getAbsolutePath());
 
-
-        args.add("--fast-boot");
-        args.add("true");
-
-        args.add("--statusbar");
-        args.add("false");
-
+        // Optional: Start with memory snapshot
         if(memorySnapshotFile != null && memorySnapshotFile.isFile()) {
             args.add("--memstate");
             args.add(memorySnapshotFile.getAbsolutePath());
         }
 
-        if(instance != INSTANCES.testing) {
-            // Super-charge only build process
-            args.add("--fast-forward");
-            args.add("true");
-        }
+        // Add all additional arguments based on instance settings
+        args.addAll(instance.getRuntimeArguments());
 
-        if (emulatorProcesses.get(instance) != null) {
-            // Instance of this type already running - try to kill it first
-            emulatorProcesses.get(instance).destroyForcibly();
-        }
-
-        if (blitter) {
-            args.add("--blitter");
-            args.add("true");
-        }
-
-        MACHINE runtimeMachine = machine == null ? MACHINE.st : machine;
-        args.add("--machine");
-        args.add(runtimeMachine.type);
-
-        int kbMemory = memory == null ? machine.kbMemory : memory.kbMemory;
-        args.add("--memsize");
-        args.add("" + kbMemory);
-
-        // No annoying keyboard beeps allowed during source conversion and compilation
-        if(instance != INSTANCES.testing) {
-            args.add("--sound");
-            args.add("off");
-        }
-
-        // Always start in windowed mode. User can still switch to fullscreen manually.
-        args.add("-w");
-
-        MODE screenMode = mode == null ? MODE.high : mode;
-        args.add("--tos-res");
-        args.add(screenMode.value);
-
-        if (screenMode == MODE.high) {
-            args.add("--monitor");
-            args.add("mono");
-        }
 
         if (programOrSource != null && programOrSource.isFile()) {
             if (programOrSource.getName().toLowerCase().endsWith(".zip")) {
@@ -350,9 +157,9 @@ public class HatariWrapper {
 
         String[] finalArgs = args.toArray(new String[0]);
 
-        System.out.println("------------- emulator arguments ---------");
-        Arrays.asList(finalArgs).stream().forEach(arg -> System.out.println("> " + arg));
-        System.out.println("------------------------------------------");
+        System.out.println("------------- emulator arguments ---------\n\r");
+        Arrays.asList(finalArgs).stream().forEach(arg -> System.out.print(arg + " "));
+        System.out.println("\n\r------------------------------------------");
 
         DesktopWindow result = null;
         ProcessBuilder pb = new ProcessBuilder(finalArgs);
@@ -360,10 +167,11 @@ public class HatariWrapper {
         try {
             Process p = pb.start();
             emulatorProcesses.put(instance, p);
+            //System.out.println(">> Emulator process exit value: " + p.exitValue());
 
             // Try to get handle of emulator window for up to 1 second
             long now = System.currentTimeMillis();
-            while(result == null && (System.currentTimeMillis() - now) < 1000) {
+            while(result == null && (System.currentTimeMillis() - now) < 5000) {
                 List<DesktopWindow> windows = WindowUtils.getAllWindows(true);
                 for(DesktopWindow desktopWindow : windows) {
                     // Make sure it's not a window that was open before (like one from an already running Hatari instance)
@@ -428,9 +236,9 @@ public class HatariWrapper {
      *
      * @param instance The emulator instance to stop.
      */
-    public static void stopEmulator(INSTANCES instance) {
+    public static void stopEmulator(HatariInstance instance) {
         if (emulatorProcesses.get(instance) != null) {
-            System.out.println(">> Shutting down Hatari instance " + instance.name());
+            System.out.println(">> Shutting down Hatari instance " + instance.getLabel());
             emulatorProcesses.get(instance).destroyForcibly();
             emulatorProcesses.remove(instance);
             emulatorWindows.remove(instance);
