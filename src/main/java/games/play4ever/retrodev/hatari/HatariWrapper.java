@@ -259,8 +259,11 @@ public class HatariWrapper {
      */
     private static void pressKeys(Robot robot, WinDef.HWND window, int... keys) {
         try {
-            User32.INSTANCE.SetFocus(window);
-            User32.INSTANCE.SetForegroundWindow(window);
+            // NOTE: Currently only works on Windows
+            if(PlatformUtil.getOperatingSystemType() == PlatformUtil.OSType.Windows) {
+                User32.INSTANCE.SetFocus(window);
+                User32.INSTANCE.SetForegroundWindow(window);
+            }
             for (int key : keys) {
                 robot.keyPress(key);
                 robot.keyRelease(key);
@@ -285,8 +288,11 @@ public class HatariWrapper {
      */
     private static void pressKeysTogether(Robot robot, WinDef.HWND window, int... keys) {
         try {
-            User32.INSTANCE.SetFocus(window);
-            User32.INSTANCE.SetForegroundWindow(window);
+            // NOTE: Currently only works on Windows
+            if(PlatformUtil.getOperatingSystemType() == PlatformUtil.OSType.Windows) {
+                User32.INSTANCE.SetFocus(window);
+                User32.INSTANCE.SetForegroundWindow(window);
+            }
             for (int key : keys) {
                 robot.keyPress(key);
             }

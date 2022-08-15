@@ -4,8 +4,11 @@ import java.util.Locale;
 
 /**
  * TOS versions included in this Java wrapper.
+ *
+ * @author Marcel Schoen
  */
 public enum TOS {
+
     etos512cz,
     etos512de,
     etos512es,
