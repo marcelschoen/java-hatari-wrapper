@@ -69,7 +69,8 @@ public class HatariInstance {
      * @param mode         The screen mode to use.
      * @param memory       The memory configuration.
      */
-    public HatariInstance(boolean windowed,
+    public HatariInstance(String label,
+                          boolean windowed,
                           boolean fullSpeed,
                           boolean fastBoot,
                           boolean useBlitter,
@@ -79,6 +80,7 @@ public class HatariInstance {
                           TOS tos,
                           ScreenMode mode,
                           Memory memory) {
+        this.label = label;
         this.windowed = windowed;
         this.fastBoot = fastBoot;
         this.fullSpeed = fullSpeed;

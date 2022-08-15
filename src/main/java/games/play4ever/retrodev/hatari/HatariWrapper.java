@@ -54,14 +54,20 @@ public class HatariWrapper {
      */
     public static void main(String... args) {
         try {
-            MachineType machine = MachineType.ste;
-            Memory memory = Memory.mb1;
-            ScreenMode mode = ScreenMode.low;
-            File fileToCopy = null;
+            HatariInstance instance = new HatariInstance("demo",
+                    true,
+                    false,
+                    true,
+                    true,
+                    true,
+                    true,
+                    MachineType.ste,
+                    TOS.tos206,
+                    ScreenMode.low,
+                    Memory.mb1);
 
-            HatariInstance instance = new HatariInstance("demo");
             prepare(new File("./hatari"), TOS.getEmuTOSByLocale());
-            startEmulator(instance, machine, memory, mode, machine.hasBlitter, null, fileToCopy);
+            startEmulator(instance, null, null);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,18 +100,10 @@ public class HatariWrapper {
      *
      * @param instance           The emulator instance to start. If such an instance is already
      *                           running, it will be killed first.
-     * @param machine            The type of machine to emulate.
-     * @param memory             Optional: The amount of memory for the emulation.
-     * @param mode               Optional: The screen mode (defaults to mono)
-     * @param blitter            True to use the blitter, false to disable it (depends on machine type).
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
      * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
     private static DesktopWindow startEmulator(HatariInstance instance,
-                                               MachineType machine,
-                                               Memory memory,
-                                               ScreenMode mode,
-                                               boolean blitter,
                                                File memorySnapshotFile,
                                                File programOrSource) {
 
