@@ -23,14 +23,13 @@ public class ZipHelper {
         File folder = new File(srcFolder);
         System.out.println("> folder: " + srcFolder + " / files: " + folder.list().length);
         if (folder.list().length == 0) {
-            addFileToZip(path , srcFolder, zip, true);
+            addFileToZip(path, srcFolder, zip, true);
         } else {
             System.out.println("> Path: " + path);
             for (String fileName : folder.list()) {
                 if (path.equals("")) {
                     addFileToZip(folder.getName(), srcFolder + "/" + fileName, zip, false);
-                }
-                else {
+                } else {
                     addFileToZip(path + "/" + folder.getName(), srcFolder + "/" + fileName, zip, false);
                 }
             }
@@ -41,12 +40,10 @@ public class ZipHelper {
         File folder = new File(srcFile);
         if (flag) {
 //            zip.putNextEntry(new ZipEntry(path + "/" +folder.getName() + "/"));
-        }
-        else {
+        } else {
             if (folder.isDirectory()) {
 //                addFolderToZip(path, srcFile, zip);
-            }
-            else {
+            } else {
                 byte[] buf = new byte[1024];
                 int len;
                 FileInputStream in = new FileInputStream(srcFile);

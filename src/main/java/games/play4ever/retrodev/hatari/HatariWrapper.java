@@ -2,7 +2,8 @@ package games.play4ever.retrodev.hatari;
 
 import com.sun.jna.platform.DesktopWindow;
 import com.sun.jna.platform.WindowUtils;
-import com.sun.jna.platform.win32.*;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef;
 import games.play4ever.retrodev.util.FileUtil;
 import games.play4ever.retrodev.util.PlatformUtil;
 
@@ -17,7 +18,7 @@ import static games.play4ever.retrodev.util.FileUtil.*;
  * Handler for the native Atari ST emulator "Hatari".
  * Will unpack the emulator from the Java resources into
  * a temporary directory and then execute it from there.
- *
+ * <p>
  * When starting the emulator, an "INSTANCE" must be selected, either "testing"
  * or "building". The main differences between
  *
@@ -25,20 +26,22 @@ import static games.play4ever.retrodev.util.FileUtil.*;
  */
 public class HatariWrapper {
 
-    private static Robot robot;
-
     static File workDirectory = new File(".");
-
-    /** Store reference to emulator processes. */
+    private static Robot robot;
+    /**
+     * Store reference to emulator processes.
+     */
     private static Map<HatariInstance, Process> emulatorProcesses = new HashMap<>();
 
-    /** Store reference to emulator windows. */
+    /**
+     * Store reference to emulator windows.
+     */
     private static Map<HatariInstance, DesktopWindow> emulatorWindows = new HashMap<>();
 
     static {
         try {
             robot = new Robot();
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to initialize robot API");
         }
     }
@@ -49,7 +52,7 @@ public class HatariWrapper {
      *
      * @param args The command line arguments.
      */
-    public static void main(String ... args) {
+    public static void main(String... args) {
         try {
             MachineType machine = MachineType.ste;
             Memory memory = Memory.mb1;
@@ -60,7 +63,7 @@ public class HatariWrapper {
             prepare(new File("./hatari"), TOS.getEmuTOSByLocale());
             startEmulator(instance, machine, memory, mode, machine.hasBlitter, null, fileToCopy);
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             printUsage();
             System.exit(-1);
@@ -89,24 +92,24 @@ public class HatariWrapper {
      * Launches the emulator of the given instance. A local file system directory
      * can be provided which will then be mounted as GEMDOS drive "C:" in the emulation.
      *
-     * @param instance        The emulator instance to start. If such an instance is already
-     *                        running, it will be killed first.
-     * @param machine         The type of machine to emulate.
-     * @param memory          Optional: The amount of memory for the emulation.
-     * @param mode            Optional: The screen mode (defaults to mono)
-     * @param blitter         True to use the blitter, false to disable it (depends on machine type).
+     * @param instance           The emulator instance to start. If such an instance is already
+     *                           running, it will be killed first.
+     * @param machine            The type of machine to emulate.
+     * @param memory             Optional: The amount of memory for the emulation.
+     * @param mode               Optional: The screen mode (defaults to mono)
+     * @param blitter            True to use the blitter, false to disable it (depends on machine type).
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
-     * @param programOrSource Optional: A program or GFA source file to copy into the GEMDOS drive.
+     * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
     private static DesktopWindow startEmulator(HatariInstance instance,
-                                             MachineType machine,
-                                             Memory memory,
-                                             ScreenMode mode,
-                                             boolean blitter,
-                                             File memorySnapshotFile,
-                                             File programOrSource) {
+                                               MachineType machine,
+                                               Memory memory,
+                                               ScreenMode mode,
+                                               boolean blitter,
+                                               File memorySnapshotFile,
+                                               File programOrSource) {
 
-        if(emulatorWindows.containsKey(instance)) {
+        if (emulatorWindows.containsKey(instance)) {
             // Emulator already running, return reference to open window
             return emulatorWindows.get(instance);
         }
@@ -131,7 +134,7 @@ public class HatariWrapper {
         args.add(runtimeFolder.getAbsolutePath());
 
         // Optional: Start with memory snapshot
-        if(memorySnapshotFile != null && memorySnapshotFile.isFile()) {
+        if (memorySnapshotFile != null && memorySnapshotFile.isFile()) {
             args.add("--memstate");
             args.add(memorySnapshotFile.getAbsolutePath());
         }
@@ -171,13 +174,13 @@ public class HatariWrapper {
 
             // Try to get handle of emulator window for up to 1 second
             long now = System.currentTimeMillis();
-            while(result == null && (System.currentTimeMillis() - now) < 5000) {
+            while (result == null && (System.currentTimeMillis() - now) < 5000) {
                 List<DesktopWindow> windows = WindowUtils.getAllWindows(true);
-                for(DesktopWindow desktopWindow : windows) {
+                for (DesktopWindow desktopWindow : windows) {
                     // Make sure it's not a window that was open before (like one from an already running Hatari instance)
-                    if(alreadyOpenWindows.get(desktopWindow.getHWND()) == null) {
+                    if (alreadyOpenWindows.get(desktopWindow.getHWND()) == null) {
                         // Check if it's a Hatari window
-                        if(desktopWindow.getTitle().startsWith("Hatari v")) {
+                        if (desktopWindow.getTitle().startsWith("Hatari v")) {
                             emulatorWindows.put(instance, desktopWindow);
                             result = desktopWindow;
                             break;
@@ -193,7 +196,7 @@ public class HatariWrapper {
             throw new RuntimeException("Failed to start the emulator: " + e, e);
         }
 
-        if(result == null) {
+        if (result == null) {
             // For some reason, the emulator window handle could not be obtained - kill the emulator and raise an exception
             stopEmulator(instance);
             throw new RuntimeException("Failed to obtain handle of emulator window!");
@@ -204,7 +207,7 @@ public class HatariWrapper {
 
     private static File getOrCreateRuntimeBuildFolder() {
         File runtimeFolder = new File(HatariWrapper.workDirectory, "drivec");
-        if(runtimeFolder.exists() && runtimeFolder.isDirectory()) {
+        if (runtimeFolder.exists() && runtimeFolder.isDirectory()) {
             return runtimeFolder;
         }
 
@@ -250,19 +253,19 @@ public class HatariWrapper {
      * will first invoke "keyPress()" and then "keyRelease()" on each key, one by one. This
      * method should be used to simulate the user typing a command or a file name.
      *
-     * @param robot The Robot instance.
+     * @param robot  The Robot instance.
      * @param window The window (will be brought to the foreground).
-     * @param keys The list of key codes to send to the window.
+     * @param keys   The list of key codes to send to the window.
      */
-    private static void pressKeys(Robot robot, WinDef.HWND window, int ... keys) {
+    private static void pressKeys(Robot robot, WinDef.HWND window, int... keys) {
         try {
             User32.INSTANCE.SetFocus(window);
             User32.INSTANCE.SetForegroundWindow(window);
-            for(int key : keys) {
+            for (int key : keys) {
                 robot.keyPress(key);
                 robot.keyRelease(key);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("** Failed to enter keyboard presses **");
         } finally {
@@ -276,18 +279,18 @@ public class HatariWrapper {
      * and then "keyRelease()" on all of them. This should be used to simulate shortcut keypressed,
      * like pressing "ALT_GR" together with "l" to load a memory shortcut.
      *
-     * @param robot The Robot instance.
+     * @param robot  The Robot instance.
      * @param window The window (will be brought to the foreground).
-     * @param keys The list of key codes to send to the window.
+     * @param keys   The list of key codes to send to the window.
      */
-    private static void pressKeysTogether(Robot robot, WinDef.HWND window, int ... keys) {
+    private static void pressKeysTogether(Robot robot, WinDef.HWND window, int... keys) {
         try {
             User32.INSTANCE.SetFocus(window);
             User32.INSTANCE.SetForegroundWindow(window);
-            for(int key : keys) {
+            for (int key : keys) {
                 robot.keyPress(key);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("** Failed to enter keyboard presses **");
         } finally {
             Arrays.stream(keys).forEach(k -> robot.keyRelease(k));
@@ -309,7 +312,7 @@ public class HatariWrapper {
         if (!hatariBin.exists() || !hatariBin.canExecute()) {
             try {
                 String emulatorArchive = osType.emulatorArchive;
-                if(emulatorArchive != null) {
+                if (emulatorArchive != null) {
                     System.out.println(">> Unpack emulator " + osType.emulatorArchive + " to: " + tempDir);
                     unpackEmulator(tempDir, osType.emulatorArchive);
                     System.out.println(">> Emulator unpacked to: " + tempDir);

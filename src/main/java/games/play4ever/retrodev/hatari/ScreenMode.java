@@ -2,6 +2,8 @@ package games.play4ever.retrodev.hatari;
 
 /**
  * Atari ST screen mode.
+ *
+ * @author Marcel Schoen
  */
 public enum ScreenMode {
     /**
@@ -20,6 +22,6 @@ public enum ScreenMode {
     public String value;
 
     ScreenMode(String value) {
-            this.value = value;
-        }
+        this.value = value;
+    }
 }

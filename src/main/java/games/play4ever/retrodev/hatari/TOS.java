@@ -42,7 +42,7 @@ public enum TOS {
     public static TOS getEmuTOSByLocale() {
         // 1st try by language code, e.g. "de", "it"
         TOS value = getLocalizedEmuTOS(Locale.getDefault().getLanguage().toLowerCase());
-        if(value == null) {
+        if (value == null) {
             // If that fails, try country code (e.g. "uk", "us")
             value = getLocalizedEmuTOS(Locale.getDefault().getCountry().toLowerCase());
         }
@@ -61,13 +61,13 @@ public enum TOS {
     }
 
     private static TOS getLocalizedEmuTOS(String code) {
-        if(code.trim().length() != 2) {
-            throw new IllegalArgumentException("Parameter code must be a 2-character value: " +  code);
+        if (code.trim().length() != 2) {
+            throw new IllegalArgumentException("Parameter code must be a 2-character value: " + code);
         }
         String tosName = "etos512" + code;
         try {
             return valueOf(tosName);
-        } catch(Exception e) {
+        } catch (Exception e) {
             // ignore
         }
         return null;
