@@ -1,5 +1,6 @@
 package games.play4ever.retrodev.hatari;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -200,17 +201,27 @@ public class HatariInstance {
     public List<String> getRuntimeArguments() {
         List<String> args = new ArrayList<>();
 
-        addArgument(args, "--fast-boot", fastBoot);
-        addArgument(args, "--fast-forward", fullSpeed);
-        addArgument(args, "--statusbar", useStatusBar);
+        if(fastBoot) {
+            addArgument(args, "--fast-boot", fastBoot);
+        }
+        if(fullSpeed) {
+            addArgument(args, "--fast-forward", fullSpeed);
+        }
+        if(useStatusBar) {
+            addArgument(args, "--statusbar", useStatusBar);
+        }
         addArgument(args, "--blitter", useBlitter);
         if (!useSound) {
             addArgument(args, "--sound", "off");
         }
 
+        addArgument(args, "--log-level", "debug");
+        addArgument(args, "--log-file", new File(HatariWrapper.workDirectory, "log.txt").getAbsolutePath());
+
         addArgument(args, "--machine", machine.type);
         addArgument(args, "--memsize", "" + memory.kbMemory);
         addArgument(args, "--tos-res", mode.value);
+        addArgument(args, "--tos", new File(HatariWrapper.workDirectory,"tos.img").getAbsolutePath());
         args.add("--monitor");
         if (mode == ScreenMode.high) {
             args.add("mono");

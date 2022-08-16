@@ -113,7 +113,9 @@ public class HatariWrapper {
         }
 
         Map<WinDef.HWND, DesktopWindow> alreadyOpenWindows = new HashMap<>();
-        WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
+        if(PlatformUtil.getOperatingSystemType() == PlatformUtil.OSType.Windows) {
+            WindowUtils.getAllWindows(true).stream().forEach(w -> alreadyOpenWindows.put(w.getHWND(), w));
+        }
 
         if (emulatorProcesses.get(instance) != null) {
             // Instance of this type already running - try to kill it first
@@ -170,22 +172,26 @@ public class HatariWrapper {
             emulatorProcesses.put(instance, p);
             //System.out.println(">> Emulator process exit value: " + p.exitValue());
 
-            // Try to get handle of emulator window for up to 1 second
-            long now = System.currentTimeMillis();
-            while (result == null && (System.currentTimeMillis() - now) < 5000) {
-                List<DesktopWindow> windows = WindowUtils.getAllWindows(true);
-                for (DesktopWindow desktopWindow : windows) {
-                    // Make sure it's not a window that was open before (like one from an already running Hatari instance)
-                    if (alreadyOpenWindows.get(desktopWindow.getHWND()) == null) {
-                        // Check if it's a Hatari window
-                        if (desktopWindow.getTitle().startsWith("Hatari v")) {
-                            emulatorWindows.put(instance, desktopWindow);
-                            result = desktopWindow;
-                            break;
+            if(!alreadyOpenWindows.isEmpty()) {
+                // Try to get handle of emulator window for up to 1 second
+                long now = System.currentTimeMillis();
+                while (result == null && (System.currentTimeMillis() - now) < 5000) {
+                    List<DesktopWindow> windows = WindowUtils.getAllWindows(true);
+                    for (DesktopWindow desktopWindow : windows) {
+                        // Make sure it's not a window that was open before (like one from an already running Hatari instance)
+                        if (alreadyOpenWindows.get(desktopWindow.getHWND()) == null) {
+                            // Check if it's a Hatari window
+                            if (desktopWindow.getTitle().startsWith("Hatari v")) {
+                                emulatorWindows.put(instance, desktopWindow);
+                                result = desktopWindow;
+                                break;
+                            }
                         }
                     }
+                    Thread.sleep(50);
                 }
-                Thread.sleep(50);
+            } else {
+                Thread.sleep(5000);
             }
 
         } catch (Exception e) {
@@ -194,7 +200,7 @@ public class HatariWrapper {
             throw new RuntimeException("Failed to start the emulator: " + e, e);
         }
 
-        if (result == null) {
+        if (result == null && !alreadyOpenWindows.isEmpty()) {
             // For some reason, the emulator window handle could not be obtained - kill the emulator and raise an exception
             stopEmulator(instance);
             throw new RuntimeException("Failed to obtain handle of emulator window!");
