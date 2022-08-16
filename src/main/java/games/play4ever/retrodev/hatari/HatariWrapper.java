@@ -103,7 +103,7 @@ public class HatariWrapper {
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
      * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
-    private static DesktopWindow startEmulator(HatariInstance instance,
+    public static DesktopWindow startEmulator(HatariInstance instance,
                                                File memorySnapshotFile,
                                                File programOrSource) {
 
@@ -166,6 +166,8 @@ public class HatariWrapper {
 
         DesktopWindow result = null;
         ProcessBuilder pb = new ProcessBuilder(finalArgs);
+        pb.redirectError(new File(HatariWrapper.workDirectory, "error.log"));
+        pb.redirectOutput(new File(HatariWrapper.workDirectory, "output.log"));
         pb.directory(HatariWrapper.workDirectory.getAbsoluteFile());
         try {
             Process p = pb.start();
