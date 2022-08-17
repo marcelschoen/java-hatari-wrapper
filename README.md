@@ -49,19 +49,30 @@ and the second is the TOS version to use (the corresponding image will be unpack
 This step is needed at least once. After that, you can run the emulator with this method:
 
 ```
-MACHINE machine = MACHINE.ste;
-MEMORY memory = MEMORY.mb1;
-MODE mode = MODE.low;
-startEmulator(INSTANCES.testing, machine, memory, mode, machine.hasBlitter, null, fileToCopy);
+HatariInstance testing = new HatariInstance("testing",
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        MachineType.ste,
+        TOS.tos206,
+        ScreenMode.low,
+        Memory.mb1);
+
+DesktopWindow emulatorWindow = HatariWrapper.startEmulator(testing);
 ```
 
-For details about the parameters, consult the javadoc.
+And then to stop and close the emulator later:
 
-_TODO - remove "instances" parameter, update description_
+```
+HatariWrapper.stopEmulator(testing);
+```
 
 ## Building
 
-This library requires Maven to be built. Just clone the repository, and in the "java-hatari-wrapper" run
+This library requires Maven 3.x and Java 11 to be built. Just clone the repository, and in the "java-hatari-wrapper" run
 
 `
 $ mvn install

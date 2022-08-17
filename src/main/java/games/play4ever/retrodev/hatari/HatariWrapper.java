@@ -100,6 +100,17 @@ public class HatariWrapper {
      *
      * @param instance           The emulator instance to start. If such an instance is already
      *                           running, it will be killed first.
+     */
+    public static DesktopWindow startEmulator(HatariInstance instance) {
+        return startEmulator(instance, null, null);
+    }
+
+    /**
+     * Launches the emulator of the given instance. A local file system directory
+     * can be provided which will then be mounted as GEMDOS drive "C:" in the emulation.
+     *
+     * @param instance           The emulator instance to start. If such an instance is already
+     *                           running, it will be killed first.
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
      * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
