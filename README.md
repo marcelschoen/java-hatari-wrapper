@@ -64,6 +64,11 @@ HatariInstance testing = new HatariInstance("testing",
 DesktopWindow emulatorWindow = HatariWrapper.startEmulator(testing);
 ```
 
+The "DesktopWindow" instance allows to push the window into the foreground (uses the JNA library),
+to be able to send it keyboard input using the Java Robot API (for certain use-cases, where the emulator
+is used to implement a build process). But NOTE: This JNA functionality currently works on Windows only,
+so Linux support is limited there.
+
 And then to stop and close the emulator later:
 
 ```
