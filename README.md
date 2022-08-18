@@ -2,12 +2,18 @@
 
 Java library wrapping the "Hatari" Atari ST emulator, making it easy to use from within Java
 
+Hatari version: 2.4.1.
+
 ## Status
 
 It's work in progress. As of right now, it only works on Windows (possibly only on Windows 10, not tested on other versions).
 While the Linux version _should_ work (the Linux "Hatari" is included), it fails in the JNA library, when determining
 the desktop windows handles. For some reason, this currently doesn't work, at least not on my Pop OS Linux. Any 
 help to get this working is appreciated.
+
+Also, MacOS is not supported at all, because I don't have a Mac and don't really care for it. Feel free to
+add support for MacOS yourself - pull requests are always welcome. I'll also help you if you have questions
+regarding the code.
 
 ## Dependency
 
