@@ -18,9 +18,10 @@ import static games.play4ever.retrodev.util.FileUtil.*;
  * Handler for the native Atari ST emulator "Hatari".
  * Will unpack the emulator from the Java resources into
  * a temporary directory and then execute it from there.
- * <p>
- * When starting the emulator, an "INSTANCE" must be selected, either "testing"
- * or "building". The main differences between
+ * <p></p>
+ * When starting the emulator, an instance object must be provided
+ * which describes the settings for the new Hatari instance, such as
+ * screen resolution, machine type, TOS version etc.
  *
  * @author Marcel Schoen
  */
@@ -95,22 +96,56 @@ public class HatariWrapper {
     }
 
     /**
-     * Launches the emulator of the given instance. A local file system directory
-     * can be provided which will then be mounted as GEMDOS drive "C:" in the emulation.
+     * Unpacks the Hatari emulator into a local temporary directory,
+     * if it isn't already there. Within the given work directory, a subfolder
+     * "drivec" will be created which will be mounted as GEMDOS drive "C:" in
+     * the emulator. This allows the host system and the emulator shared file access.
      *
-     * @param instance           The emulator instance to start. If such an instance is already
-     *                           running, it will be killed first.
+     * @param workDirectory The directory where to unpack the emulator files.
+     */
+    public static void prepare(File workDirectory, TOS tos) {
+        HatariWrapper.workDirectory = workDirectory;
+        HatariWrapper.workDirectory.mkdirs();
+        File tempDir = workDirectory;
+        PlatformUtil.OSType osType = PlatformUtil.getOperatingSystemType();
+        File hatariBin = new File(tempDir, osType.emulatorExecutable);
+        if (!hatariBin.exists() || !hatariBin.canExecute()) {
+            try {
+                String emulatorArchive = osType.emulatorArchive;
+                if (emulatorArchive != null) {
+                    System.out.println(">> Unpack emulator " + osType.emulatorArchive + " to: " + tempDir);
+                    unpackEmulator(tempDir, osType.emulatorArchive);
+                    System.out.println(">> Emulator unpacked to: " + tempDir);
+                } else {
+                    throw new RuntimeException(">> Platform '" + PlatformUtil.getOperatingSystemType().name() + " not yet supported.");
+                }
+            } catch (IOException ex) {
+                deleteDir(tempDir);
+                throw new RuntimeException("Failed to prepare the emulator: " + ex, ex);
+            }
+        }
+        // Always extract TOS to make sure it doesn't use a wrong version from a previous run
+        try {
+            unpackTOS(tempDir, tos);
+        } catch (IOException ex) {
+            deleteDir(tempDir);
+            throw new RuntimeException("Failed to prepare TOS: " + ex, ex);
+        }
+    }
+
+    /**
+     * Launches the emulator of the given instance.
+     *
+     * @param instance   The emulator instance to start.
      */
     public static DesktopWindow startEmulator(HatariInstance instance) {
         return startEmulator(instance, null, null);
     }
 
     /**
-     * Launches the emulator of the given instance. A local file system directory
-     * can be provided which will then be mounted as GEMDOS drive "C:" in the emulation.
+     * Launches the emulator of the given instance.
      *
-     * @param instance           The emulator instance to start. If such an instance is already
-     *                           running, it will be killed first.
+     * @param instance           The emulator instance to start.
      * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
      * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
@@ -319,42 +354,6 @@ public class HatariWrapper {
             throw new RuntimeException("** Failed to enter keyboard presses **");
         } finally {
             Arrays.stream(keys).forEach(k -> robot.keyRelease(k));
-        }
-    }
-
-    /**
-     * Unpacks the Hatari emulator into a local temporary directory,
-     * if it isn't already there.
-     *
-     * @param workDirectory The directory where to unpack the emulator files.
-     */
-    public static void prepare(File workDirectory, TOS tos) {
-        HatariWrapper.workDirectory = workDirectory;
-        HatariWrapper.workDirectory.mkdirs();
-        File tempDir = workDirectory;
-        PlatformUtil.OSType osType = PlatformUtil.getOperatingSystemType();
-        File hatariBin = new File(tempDir, osType.emulatorExecutable);
-        if (!hatariBin.exists() || !hatariBin.canExecute()) {
-            try {
-                String emulatorArchive = osType.emulatorArchive;
-                if (emulatorArchive != null) {
-                    System.out.println(">> Unpack emulator " + osType.emulatorArchive + " to: " + tempDir);
-                    unpackEmulator(tempDir, osType.emulatorArchive);
-                    System.out.println(">> Emulator unpacked to: " + tempDir);
-                } else {
-                    throw new RuntimeException(">> Platform '" + PlatformUtil.getOperatingSystemType().name() + " not yet supported.");
-                }
-            } catch (IOException ex) {
-                deleteDir(tempDir);
-                throw new RuntimeException("Failed to prepare the emulator: " + ex, ex);
-            }
-        }
-        // Always extract TOS to make sure it doesn't use a wrong version from a previous run
-        try {
-            unpackTOS(tempDir, tos);
-        } catch (IOException ex) {
-            deleteDir(tempDir);
-            throw new RuntimeException("Failed to prepare TOS: " + ex, ex);
         }
     }
 
