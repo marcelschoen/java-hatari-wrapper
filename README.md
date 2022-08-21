@@ -7,7 +7,7 @@ Hatari version: 2.4.1.
 ## Status
 
 It's work in progress. As of right now, it only works on Windows (possibly only on Windows 10, not tested on other versions).
-and, in a slightly reduced fashion, on Linux. The Linux version is a bit less robut because the JNA library used to control
+and, in a slightly reduced fashion, on Linux. The Linux version is a bit less robust because the JNA library used to control
 the emulator desktop window (and force it into the foreground) works only on Windows. 
 
 However, launching the emulator should work fine on any recent Linux that supports SDL 2.0.
