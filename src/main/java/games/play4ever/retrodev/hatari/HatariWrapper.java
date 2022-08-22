@@ -150,8 +150,25 @@ public class HatariWrapper {
      * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
      */
     public static DesktopWindow startEmulator(HatariInstance instance,
-                                               File memorySnapshotFile,
-                                               File programOrSource) {
+                                              File memorySnapshotFile,
+                                              File programOrSource) {
+        return startEmulator(instance, memorySnapshotFile, programOrSource, null, null);
+    }
+
+    /**
+     * Launches the emulator of the given instance.
+     *
+     * @param instance           The emulator instance to start.
+     * @param memorySnapshotFile Optional: Memory snapshot file to start the emulator with.
+     * @param programOrSource    Optional: A program or GFA source file to copy into the GEMDOS drive.
+     * @param imageFloppyA       Optional: A floppy image file for drive A.
+     * @param imageFloppyB       Optional: A floppy image file for drive B.
+     */
+    public static DesktopWindow startEmulator(HatariInstance instance,
+                                              File memorySnapshotFile,
+                                              File programOrSource,
+                                              File imageFloppyA,
+                                              File imageFloppyB) {
 
         if (emulatorWindows.containsKey(instance)) {
             // Emulator already running, return reference to open window
@@ -178,6 +195,9 @@ public class HatariWrapper {
         File runtimeFolder = getOrCreateRuntimeBuildFolder();
         args.add("-d");
         args.add(runtimeFolder.getAbsolutePath());
+
+        addFloppyParameters(args, imageFloppyA, "a");
+        addFloppyParameters(args, imageFloppyB, "b");
 
         // Optional: Start with memory snapshot
         if (memorySnapshotFile != null && memorySnapshotFile.isFile()) {
@@ -257,6 +277,17 @@ public class HatariWrapper {
         System.out.println("> Resulting desktop window: " + result);
 
         return result;
+    }
+
+    private static void addFloppyParameters(ArrayList<String> args, File floppyImage, String driveLetter) {
+        args.add("--drive-" + driveLetter);
+        if(floppyImage == null) {
+            args.add("off");
+        } else {
+            args.add("on");
+            args.add("--disk-" + driveLetter);
+            args.add(floppyImage.getAbsolutePath());
+        }
     }
 
     private static File getOrCreateRuntimeBuildFolder() {
